@@ -516,7 +516,7 @@ kbd {
 .stat-row .stat { padding: 18px 22px; }
 .stat-row .stat + .stat { border-left: 1px solid var(--line); }
 .stat-row .figure { font-size: 40px; }
-.chart { position: relative; }
+.chart, .chart-plot { position: relative; }
 .chart svg { display: block; overflow: visible; }
 .chart svg:focus { outline: none; }
 .chart-empty { display: grid; place-items: center; color: var(--ink-2); border: 1px dashed var(--line-strong); border-radius: 10px; }

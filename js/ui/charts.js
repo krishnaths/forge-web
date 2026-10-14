@@ -92,41 +92,75 @@ export function BarChart({ bars, height = 200, label, unit = '' }) {
   const gap = Math.min(8, (w * 0.25) / bars.length);
   const bw = (w - gap * (bars.length - 1)) / bars.length;
   const plotH = height - PAD_B;
-  const shown = bars[hover ?? bars.length - 1];
+  const barH = b => Math.max(2, (b.value / maxV) * plotH);
+  const active = hover ?? bars.length - 1;
+  const shown = bars[active];
+  // Pick the bar from the pointer's x over the whole plot, so gaps between bars don't drop the readout.
+  const onMove = e => {
+    const x = e.clientX - e.currentTarget.getBoundingClientRect().left;
+    setHover(Math.min(bars.length - 1, Math.max(0, Math.floor((x + gap / 2) / (bw + gap)))));
+  };
   return html`
     <div ref=${ref} class="chart">
       <div class="chart-caption"><strong>${Math.round(shown.value).toLocaleString()}${unit}</strong> ${shortDate(shown.day)}</div>
       ${w > 0 && html`
-        <svg width=${w} height=${height} role="img" aria-label=${label} onMouseLeave=${() => setHover(null)}>
-          ${bars.map((b, i) => {
-            const bh = Math.max(2, (b.value / maxV) * plotH);
-            return html`<rect x=${i * (bw + gap)} y=${plotH - bh} width=${bw} height=${bh} rx=${Math.min(4, bw / 3)}
-              class=${`bar-rect ${i === (hover ?? bars.length - 1) ? 'on' : ''}`} onMouseEnter=${() => setHover(i)} />`;
-          })}
-          <text x="0" y=${height - 4} class="axis">${shortDate(bars[0].day)}</text>
-          <text x=${w} y=${height - 4} class="axis" text-anchor="end">${shortDate(bars[bars.length - 1].day)}</text>
-        </svg>`}
+        <div class="chart-plot">
+          <svg width=${w} height=${height} role="img" aria-label=${label} onMouseMove=${onMove} onMouseLeave=${() => setHover(null)}>
+            ${bars.map((b, i) => html`<rect x=${i * (bw + gap)} y=${plotH - barH(b)} width=${bw} height=${barH(b)} rx=${Math.min(4, bw / 3)}
+              class=${`bar-rect ${i === active ? 'on' : ''}`} />`)}
+            <text x="0" y=${height - 4} class="axis">${shortDate(bars[0].day)}</text>
+            <text x=${w} y=${height - 4} class="axis" text-anchor="end">${shortDate(bars[bars.length - 1].day)}</text>
+          </svg>
+          ${hover != null && html`
+            <div class="chart-readout" style=${{
+              left: `${Math.min(Math.max(hover * (bw + gap) + bw / 2, 70), w - 70)}px`,
+              top: `${Math.max(0, plotH - barH(shown) - 36)}px`,
+            }}>
+              <strong>${Math.round(shown.value).toLocaleString()}${unit}</strong> ${shortDate(shown.day)}
+            </div>`}
+        </div>`}
     </div>`;
 }
 
-/** Habit grid: one column per day (oldest first), one row per habit, labelled. */
+/** Habit grid: one column per day (oldest first), one row per habit, labelled. Hover reads out a cell. */
 export function StreakGrid({ days, labels }) {
   const [ref, w] = useWidth();
+  const [hover, setHover] = useState(null);
   const rows = labels.length;
   const LABEL_W = 150;
   if (!days.length) return html`<div ref=${ref}><${Empty} text="Tick a habit to start the grid" height=${120} /></div>`;
   const gap = 3;
   const cell = Math.max(3, Math.min(18, (w - LABEL_W - gap * (days.length - 1)) / days.length));
   const height = rows * (cell + gap);
+  const onMove = e => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const c = Math.floor((e.clientX - box.left - LABEL_W) / (cell + gap));
+    const r = Math.floor((e.clientY - box.top) / (cell + gap));
+    setHover(c >= 0 && c < days.length && r >= 0 && r < rows ? [c, r] : null);
+  };
+  const tip = hover && (() => {
+    const [c, r] = hover;
+    const [day, flags] = days[c];
+    return { c, r, text: `${labels[r]}${flags[r] ? '' : ' (not ticked)'}`, day };
+  })();
   return html`
-    <div ref=${ref}>
+    <div ref=${ref} class="chart">
       ${w > 0 && html`
-        <svg width=${w} height=${height} role="img" aria-label="Habits ticked, one column per day">
+        <svg width=${w} height=${height} role="img" aria-label="Habits ticked, one column per day"
+             onMouseMove=${onMove} onMouseLeave=${() => setHover(null)}>
           ${labels.map((l, r) => html`
             <text x="0" y=${r * (cell + gap) + cell / 2 + 4} class="axis label-text">${l}</text>`)}
           ${days.map(([day, flags], c) => flags.map((done, r) => html`
             <rect x=${LABEL_W + c * (cell + gap)} y=${r * (cell + gap)} width=${cell} height=${cell} rx=${cell * 0.25}
-                  fill=${done ? 'var(--primary)' : 'var(--surface-high)'}><title>${shortDate(day)}: ${labels[r]}${done ? '' : ' (not ticked)'}</title></rect>`))}
-        </svg>`}
+                  fill=${done ? 'var(--primary)' : 'var(--surface-high)'}
+                  stroke=${tip && tip.c === c && tip.r === r ? 'var(--ink)' : 'none'} />`))}
+        </svg>
+        ${tip && html`
+          <div class="chart-readout" style=${{
+            left: `${Math.min(Math.max(LABEL_W + tip.c * (cell + gap) + cell / 2, 90), w - 90)}px`,
+            top: `${tip.r * (cell + gap) - 34}px`,
+          }}>
+            <strong>${shortDate(tip.day)}</strong> ${tip.text}
+          </div>`}`}
     </div>`;
 }
