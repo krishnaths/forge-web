@@ -80,9 +80,13 @@ two-way sync with `supabase/migrations/0001_init.sql`. No schema change is neede
 
 ### What the phone sees
 
-The phone pushes but only pulls on **Settings → Restore**. Edits made on the web reach Supabase
-immediately but reach the phone only when it restores. A deletion is only seen by the
-other device if it restores before re-adding the row.
+The phone syncs both ways too: on open, every 5 minutes while on screen, a few seconds after an
+edit, and every 6 hours in the background. A web edit shows on the phone the next time it is
+opened. One gap remains on both sides: an undone set is deleted from Supabase, but a device that
+already pulled it keeps it until it is undone there as well.
+
+Supabase cost stays negligible: a pull asks only for rows changed since the last one (seven small
+requests), a hidden browser tab never polls, and refocusing pulls at most once a minute.
 
 ## Differences from the phone, and why
 

@@ -355,7 +355,15 @@ export function startAutoSync() {
     if (applyingRemote) return;
     if ([...tables].some(t => t in TABLES || t === 'sync_tombstone')) schedulePush();
   });
-  const pull = () => { if (state.session && navigator.onLine) syncNow().catch(() => {}); };
+  // Only while the tab is on screen, and at most once a minute however often it is refocused:
+  // a background tab costs Supabase nothing.
+  let lastPull = 0;
+  const pull = () => {
+    if (!state.session || !navigator.onLine || document.visibilityState !== 'visible') return;
+    if (Date.now() - lastPull < 60_000) return;
+    lastPull = Date.now();
+    syncNow().catch(() => {});
+  };
   addEventListener('online', () => { emit(); pull(); });
   addEventListener('offline', emit);
   document.addEventListener('visibilitychange', () => {
