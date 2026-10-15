@@ -70,7 +70,7 @@ two-way sync with `supabase/migrations/0001_init.sql`. No schema change is neede
 
 - **Push** is the phone's `SyncEngine`: per-table `updatedAt` watermarks, upsert on the natural
   key, undone sets sent as DELETEs from `sync_tombstone`. It runs 3 s after the last edit, so
-  online it is effectively a direct save to Supabase. Offline, edits queue in IndexedDB and go up
+  online it is effectively a direct save to Supabase. There is no "Sync now" button: nothing needs pressing. Offline, edits queue in IndexedDB and go up
   when the connection returns.
 - **Pull** runs on open, on returning to the tab, and every 5 minutes. It keeps a remote row only
   where the browser has none or an older one. That means phone edits show up here with no manual

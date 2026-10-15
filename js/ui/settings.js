@@ -105,6 +105,7 @@ function CloudSection() {
           </form>`
         : html`
           <div class="setting-title">Signed in as ${st.email}</div>
+          <div class="muted">Every change saves on its own; there is nothing to press.</div>
           <div class="muted">
             ${st.lastSyncAt ? `Last sync ${new Date(st.lastSyncAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}` : 'Not synced yet'}
             ${pending > 0 && ` · ${pending} edit${pending === 1 ? '' : 's'} waiting`}
@@ -112,8 +113,6 @@ function CloudSection() {
           </div>
           ${st.lastError && html`<div class="error">Last attempt failed: ${st.lastError}</div>`}
           <div class="row gap-8 pad-top-12 wrap">
-            <button type="button" class="filled-button" disabled=${st.busy}
-                    onClick=${() => run(sync.syncNow, n => (n ? `Up to date. ${n} rows pulled.` : 'Up to date.'))}>Sync now</button>
             <button type="button" class="outlined-button" disabled=${st.busy} onClick=${() => setConfirmRestore(true)}>Restore</button>
             <button type="button" class="text-button" disabled=${st.busy}
                     onClick=${() => run(sync.signOut, () => 'Signed out. Nothing will be uploaded.')}>Sign out</button>
