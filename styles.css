@@ -540,6 +540,29 @@ svg .bar-rect.on { opacity: 1; }
 .photo-strip { display: grid; grid-template-columns: repeat(3, 140px) 1fr; gap: 14px; align-items: end; }
 .measure-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
 
+/* ---------------------------------------------------------------- Dashboard */
+
+svg .col-rect { fill: var(--primary); opacity: 0.55; transition: opacity 100ms; }
+svg .col-rect.met { fill: var(--good); }
+svg .col-rect.on { opacity: 1; }
+/* The History calendar's scale: ember tints for partial days, green for all four. */
+.heat, .heat-key { fill: var(--surface-high); background: var(--surface-high); }
+.heat-1 { fill: color-mix(in srgb, var(--primary) 22%, var(--surface-high)); background: color-mix(in srgb, var(--primary) 22%, var(--surface-high)); }
+.heat-2 { fill: color-mix(in srgb, var(--primary) 45%, var(--surface-high)); background: color-mix(in srgb, var(--primary) 45%, var(--surface-high)); }
+.heat-3 { fill: color-mix(in srgb, var(--primary) 75%, var(--surface-high)); background: color-mix(in srgb, var(--primary) 75%, var(--surface-high)); }
+.heat-4 { fill: var(--good); background: var(--good); }
+svg .heat { cursor: pointer; }
+svg .heat.today { stroke: var(--ink); stroke-width: 1.5; }
+svg .heat.on { stroke: var(--ink-2); stroke-width: 1.5; }
+.heat-key { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.ratio-list { display: flex; flex-direction: column; gap: 10px; }
+.ratio-head { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.ratio-head strong { font: 700 18px var(--display); }
+.table-scroll { max-height: 520px; overflow: auto; }
+.table-scroll thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.dash-table td { white-space: nowrap; }
+.dash-table th:nth-child(n+3):nth-child(-n+5), .dash-table th:nth-child(10) { text-align: right; }
+
 /* ---------------------------------------------------------------- Photos */
 
 .photo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 260px)); gap: 20px; }

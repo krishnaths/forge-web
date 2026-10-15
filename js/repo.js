@@ -174,6 +174,9 @@ export function volumeByDay() {
   return [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 }
 
+export const sessions = () => db.all('workout_session').sort((a, b) => a.day.localeCompare(b.day));
+export const sets = () => db.all('set_log');
+
 export const completedSessionCount = () =>
   db.all('workout_session').filter(s => s.finishedAt != null).length;
 
@@ -248,6 +251,8 @@ export function setMealFollowed(day, plan, slotKey, optionIndex, followed) {
   });
 }
 
+export const mealLogs = (from, to) => db.all('meal_log').filter(m => m.day >= from && m.day <= to);
+
 /** A day's explicit choice wins; otherwise the weekday default from Settings. */
 export const resolveDayType = (explicit, day, vegWeekdays) =>
   explicit ?? (vegWeekdays.includes(dayOfWeek(day)) ? 'VEG' : 'NONVEG');
@@ -318,6 +323,7 @@ export function summarise(from, to, vegWeekdays) {
     const mealsFollowed = plan.slots.filter(s => dayMeals.some(m => m.slotKey === s.key && m.followed)).length;
     const d = {
       day,
+      dayType: plan.key,
       mealsFollowed,
       mealsTotal: plan.slots.length,
       waterMl: log?.waterMl ?? null,

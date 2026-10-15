@@ -2,7 +2,7 @@
 // the arrow keys) reads out one point; otherwise the numbers live in the panel around the chart.
 
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { shortDate } from '../dates.js';
+import { dayOfWeek, parse, shortDate, weekdayShort } from '../dates.js';
 import { html } from './core.js';
 
 function useWidth() {
@@ -161,6 +161,113 @@ export function StreakGrid({ days, labels }) {
             top: `${tip.r * (cell + gap) - 34}px`,
           }}>
             <strong>${shortDate(tip.day)}</strong> ${tip.text}
+          </div>`}`}
+    </div>`;
+}
+
+/** A 1 / 2 / 2.5 / 5 × 10^k axis top at or above `v`, with its ticks, so gridlines land on round numbers. */
+function niceScale(v) {
+  if (v <= 0) return { max: 1, ticks: [0, 1] };
+  const raw = v / 4;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw);
+  const max = step * Math.ceil(v / step);
+  return { max, ticks: Array.from({ length: Math.round(max / step) + 1 }, (_, i) => i * step) };
+}
+
+const dayMonth = s => parse(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+
+/**
+ * One column per day or week, oldest first: bars [{day, value|null, text, title?}]. Columns that
+ * reach `target` are green, the rest ember; null is "not logged" (no column). Hover, or focus and
+ * the arrow keys, reads one out.
+ */
+export function ColumnChart({ bars, target, targetLabel, height = 200, label, fmt = String, empty = 'Nothing logged in this range yet' }) {
+  const [ref, w] = useWidth();
+  const [hover, setHover] = useState(null);
+  if (!bars.some(b => b.value != null)) return html`<div ref=${ref}><${Empty} text=${empty} height=${height} /></div>`;
+  const { max, ticks } = niceScale(Math.max(target ?? 0, ...bars.map(b => b.value ?? 0)));
+  const plotW = Math.max(0, w - PAD_L);
+  const plotH = height - PAD_B;
+  const slot = plotW / bars.length;
+  const gap = Math.min(4, slot * 0.25);
+  const bw = Math.min(28, slot - gap);
+  const py = v => plotH - (v / max) * plotH;
+  const cx = i => PAD_L + slot * i + slot / 2;
+  const labelled = bars.length <= 6 ? bars.map((_, i) => i)
+    : Array.from({ length: 5 }, (_, i) => Math.round((i * (bars.length - 1)) / 4));
+
+  const onMove = e => {
+    const x = e.clientX - e.currentTarget.getBoundingClientRect().left - PAD_L;
+    setHover(Math.min(bars.length - 1, Math.max(0, Math.floor(x / slot))));
+  };
+  const onKey = e => {
+    const at = hover ?? bars.length - 1;
+    if (e.key === 'ArrowLeft') setHover(Math.max(0, at - 1));
+    if (e.key === 'ArrowRight') setHover(Math.min(bars.length - 1, at + 1));
+  };
+  const b = hover != null ? bars[hover] : null;
+
+  return html`
+    <div ref=${ref} class="chart">
+      ${w > 0 && html`
+        <svg width=${w} height=${height} role="img" aria-label=${label} tabIndex="0"
+             onMouseMove=${onMove} onMouseLeave=${() => setHover(null)} onKeyDown=${onKey} onBlur=${() => setHover(null)}>
+          ${ticks.map(t => html`
+            <line x1=${PAD_L} x2=${w} y1=${py(t)} y2=${py(t)} class="gridline" />
+            <text x=${PAD_L - 8} y=${py(t) + 4} class="axis" text-anchor="end">${fmt(t)}</text>`)}
+          ${bars.map((d, i) => d.value > 0 && html`
+            <rect x=${cx(i) - bw / 2} y=${py(d.value)} width=${bw} height=${plotH - py(d.value)} rx=${Math.min(4, bw / 3)}
+                  class=${`col-rect ${target != null && d.value >= target ? 'met' : ''} ${hover === i ? 'on' : ''}`} />`)}
+          ${target != null && html`
+            <line x1=${PAD_L} x2=${w} y1=${py(target)} y2=${py(target)} class="goal" />
+            <text x=${w} y=${py(target) - 6} class="axis goal-label" text-anchor="end">${targetLabel}</text>`}
+          ${labelled.map(i => html`<text x=${cx(i)} y=${height - 4} class="axis" text-anchor="middle">${dayMonth(bars[i].day)}</text>`)}
+        </svg>
+        ${b && html`
+          <div class="chart-readout" style=${{ left: `${Math.min(Math.max(cx(hover), 80), w - 80)}px` }}>
+            <strong>${b.value == null ? '—' : b.text}</strong> ${b.title ?? dayMonth(b.day)}
+          </div>`}`}
+    </div>`;
+}
+
+/**
+ * Days as a Monday-first calendar strip, one column per week, shaded by how many of the four
+ * targets were hit (the History calendar's colours). days: [{day, score, future?}] oldest first.
+ */
+export function HeatCalendar({ days, today, onPick }) {
+  const [ref, w] = useWidth();
+  const [hover, setHover] = useState(null);
+  if (!days.length) return html`<div ref=${ref}><${Empty} text="Nothing logged in this range yet" height=${120} /></div>`;
+  const LABEL_W = 34;
+  const lead = dayOfWeek(days[0].day) - 1;
+  const weeks = Math.ceil((lead + days.length) / 7);
+  const cell = Math.max(8, Math.min(30, Math.floor((w - LABEL_W) / weeks)));
+  const height = cell * 7 + 20;
+  const pos = i => ({ x: LABEL_W + Math.floor((lead + i) / 7) * cell, y: ((lead + i) % 7) * cell });
+  const d = hover != null ? days[hover] : null;
+  let lastMonth = null;
+  return html`
+    <div ref=${ref} class="chart">
+      ${w > 0 && html`
+        <svg width=${LABEL_W + weeks * cell} height=${height} role="img" aria-label="Targets hit per day">
+          ${[1, 3, 5, 7].map(n => html`<text x="0" y=${(n - 1) * cell + cell / 2 + 4} class="axis">${weekdayShort(n)}</text>`)}
+          ${days.map((x, i) => {
+            const { x: px, y: py } = pos(i);
+            const month = x.day.slice(0, 7);
+            const showMonth = py === 0 && month !== lastMonth;
+            if (showMonth) lastMonth = month;
+            return html`
+              <rect x=${px + 1} y=${py + 1} width=${cell - 2} height=${cell - 2} rx=${Math.min(4, cell / 4)}
+                    class=${`heat heat-${x.score} ${x.day === today ? 'today' : ''} ${hover === i ? 'on' : ''}`}
+                    onMouseEnter=${() => setHover(i)} onMouseLeave=${() => setHover(null)}
+                    onClick=${onPick && (() => onPick(x.day))} />
+              ${showMonth && html`<text x=${px} y=${height - 4} class="axis">${parse(x.day).toLocaleDateString(undefined, { month: 'short' })}</text>`}`;
+          })}
+        </svg>
+        ${d && html`
+          <div class="chart-readout" style=${{ left: `${Math.min(Math.max(pos(hover).x + cell / 2, 90), w - 90)}px`, top: `${pos(hover).y - 34}px` }}>
+            <strong>${d.score} of 4</strong> ${dayMonth(d.day)}
           </div>`}`}
     </div>`;
 }

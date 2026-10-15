@@ -1,9 +1,8 @@
 # Forge for the web
 
-The Android app's features as a desktop web app: Today, Workout, Diet, History, Progress, the
-exercise library, progress photos and Settings, with the same program, meal plan, rules, palette and
-Supabase schema. Plain HTML and ES modules, no build step, in the same style as
-[forge-dashboard](https://github.com/krishnaths/forge-dashboard). Installable as a PWA and usable
+The Android app's features as a desktop web app: Today, Workout, Diet, History, Progress, Dashboard,
+the exercise library, progress photos and Settings, with the same program, meal plan, rules, palette and
+Supabase schema. Plain HTML and ES modules, no build step,. Installable as a PWA and usable
 offline.
 
 ## Design
@@ -15,6 +14,10 @@ Laid out for a desktop or laptop screen, not stretched from the phone:
   targets side by side, every meal and the habits. Workout has two panes: the exercise list, and
   the active exercise with a set table, type-in steppers, the form video inline and the rest timer.
   History puts the calendar and day table beside a day editor.
+- Dashboard (formerly the separate forge-dashboard site) charts a 7-day to 1-year range: targets
+  hit per day, water, steps, meals per slot, other habits, weight, sessions and volume per week, and
+  an every-day table. It reads the local store like every other screen, so it works offline; a day
+  in the heatmap or table opens in History's editor.
 - Keyboard: on Workout, `Enter` completes the set and `↑`/`↓` switch exercise. Dialogs close with
   `Esc`. Charts read out a point on hover, or with the arrow keys once focused.
 - The phone's palette (Theme.kt): orange for the next action, green only for a target hit.
@@ -77,8 +80,8 @@ two-way sync with `supabase/migrations/0001_init.sql`. No schema change is neede
 
 ### What the phone sees
 
-The phone pushes but only pulls on **Settings → Restore**. Edits made on the web reach the
-dashboard immediately but reach the phone only when it restores. A deletion is only seen by the
+The phone pushes but only pulls on **Settings → Restore**. Edits made on the web reach Supabase
+immediately but reach the phone only when it restores. A deletion is only seen by the
 other device if it restores before re-adding the row.
 
 ## Differences from the phone, and why

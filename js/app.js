@@ -8,6 +8,7 @@ import { positionFor, seedIfNeeded } from './repo.js';
 import { onSettings, settings } from './settings.js';
 import * as sync from './sync.js';
 import { html, Icon, Toasts } from './ui/core.js';
+import { DashboardScreen } from './ui/dashboard.js';
 import { DietScreen } from './ui/diet.js';
 import { HistoryScreen } from './ui/history.js';
 import { LibraryScreen } from './ui/library.js';
@@ -23,6 +24,7 @@ const PRIMARY = [
   ['diet', 'Diet', 'diet'],
   ['history', 'History', 'history'],
   ['progress', 'Progress', 'progress'],
+  ['dashboard', 'Dashboard', 'dashboard'],
 ];
 const SECONDARY = [
   ['library', 'Exercise library', 'library'],
@@ -32,7 +34,7 @@ const SECONDARY = [
 
 const SCREENS = {
   today: TodayScreen, workout: WorkoutScreen, diet: DietScreen, history: HistoryScreen,
-  progress: ProgressScreen, library: LibraryScreen, photos: PhotosScreen, settings: SettingsScreen,
+  progress: ProgressScreen, dashboard: DashboardScreen, library: LibraryScreen, photos: PhotosScreen, settings: SettingsScreen,
 };
 
 const route = () => {

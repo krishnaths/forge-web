@@ -22,6 +22,13 @@ const TARGETS = [
 let month = null;
 let selected = null;
 
+/** Opens History on a given day, with its editor: how the Dashboard's table hands a day over. */
+export function openDay(day) {
+  month = monthOf(day);
+  selected = day;
+  location.hash = '#/history';
+}
+
 export function HistoryScreen() {
   const [, rerender] = useState(0);
   const today = todayIso();

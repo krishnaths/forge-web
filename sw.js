@@ -1,6 +1,6 @@
 // Offline shell: the app's own files are cached on install and refreshed on every fetch.
 // Supabase and YouTube requests are never cached. Bump VERSION when the file list changes.
-const VERSION = 'forge-web-3';
+const VERSION = 'forge-web-4';
 const SHELL = [
   './', 'index.html', 'styles.css', 'config.js', 'icon.svg', 'manifest.webmanifest',
   'data/program.json', 'data/meal_plan.json',
@@ -11,7 +11,7 @@ const SHELL = [
   'js/app.js', 'js/ai.js', 'js/dates.js', 'js/db.js', 'js/program.js', 'js/reminders.js',
   'js/repo.js', 'js/settings.js', 'js/sync.js', 'js/timer.js',
   'js/ui/core.js', 'js/ui/components.js', 'js/ui/charts.js', 'js/ui/today.js', 'js/ui/workout.js',
-  'js/ui/diet.js', 'js/ui/history.js', 'js/ui/progress.js', 'js/ui/photos.js', 'js/ui/library.js',
+  'js/ui/diet.js', 'js/ui/history.js', 'js/ui/progress.js', 'js/ui/dashboard.js', 'js/ui/photos.js', 'js/ui/library.js',
   'js/ui/settings.js',
 ];
 
